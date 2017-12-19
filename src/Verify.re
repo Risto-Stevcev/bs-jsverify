@@ -1,0 +1,298 @@
+module Arbitrary = {
+  /* This abstract type is used to represent a disjoint union
+   * It's parameter takes a tuple of the possible types that it is, ie:
+   * sum((string, int));  // a disjoint union of `string` or `int`
+   * sum((Js.boolean, string, array(int)));
+   */
+  type sum('a);
+
+  type arbitrary('a) = {.
+    "generator": int => 'a,
+    "shrink": 'a => array('a),
+    "show": 'a => string
+  };
+
+
+  [@bs.module "jsverify"] external sampler :
+    (~arb:arbitrary('a), ~genSize:int=?, unit) => 'a = "sampler";
+
+  [@b.send : arbitrary('a)] external smap :
+    ('a => 'b, 'b => 'a, ~newShow:('b => string)=?) => arbitrary('b) = "smap";
+
+  [@bs.module "jsverify"] external bless :
+    {.. "generator": int => 'a} => arbitrary('a) = "bless";
+
+
+  /* * * * * * * * * *
+   * For primitives  *
+   * * * * * * * * * */
+  [@bs.module "jsverify"] external arb_bool : arbitrary(Js.boolean) = "bool";
+
+  [@bs.module "jsverify"] external arb_nat : arbitrary(int) = "nat";
+
+  [@bs.module "jsverify"] external arb_int : (int, int) => arbitrary(int) = "integer";
+
+  [@bs.module "jsverify"] external arb_float : (float, float) => arbitrary(float) = "number";
+
+  [@bs.module "jsverify"] external arb_character : arbitrary(string) = "char";
+  [@bs.module "jsverify"] external arb_ascii_character : arbitrary(string) = "asciichar";
+
+  [@bs.module "jsverify"] external arb_string : arbitrary(string) = "string";
+  [@bs.module "jsverify"] external arb_not_empty_string : arbitrary(string) = "nestring";
+
+  [@bs.module "jsverify"] external arb_ascii_string : arbitrary(string) = "asciistring";
+  [@bs.module "jsverify"] external arb_not_empty_ascii_string : arbitrary(string) = "asciinestring";
+
+  [@bs.module "jsverify"] external arb_unit : arbitrary(unit) = "unit";
+
+  [@bs.module "jsverify"] external arb_array : arbitrary('a) => arbitrary(array('a)) = "array";
+  [@bs.module "jsverify"] external arb_not_empty_array :
+    arbitrary('a) => arbitrary(array('a)) = "nearray";
+
+  [@bs.module "jsverify"] external arb_date : arbitrary(Js.Date.t) = "datetime";
+
+
+  /* * * * * * * *
+   * For objects *
+   * * * * * * * */
+  [@bs.module "jsverify"] external arb_object : arbitrary(Js.t('a)) = "object";
+
+  [@bs.module "jsverify"] external arb_json : arbitrary(Js.Json.t) = "json";
+
+  [@bs.module "jsverify"] external arb_dict : arbitrary('a) => arbitrary(Js.Dict.t('a)) = "dict";
+
+
+  /* * * * * *
+   * Helpers *
+   * * * * * */
+  [@bs.module "jsverify"] external arb_constant : 'a => arbitrary('a) = "constant";
+
+  [@bs.module "jsverify"] external non_shrink : arbitrary('a) => arbitrary('a) = "nonshrink";
+
+
+  /* * * * * * * *
+   * Combinators *
+   * * * * * * * */
+  [@bs.module "jsverify"] external arb_small : arbitrary('a) => arbitrary('a) = "small";
+
+  [@bs.module "jsverify"] external arb_such_that :
+    (arbitrary('a), 'a => Js.boolean) => arbitrary('a) = "suchthat";
+
+  [@bs.module "jsverify"] external arb_elements : array('a) => arbitrary('a) = "elements";
+
+  [@bs.module "jsverify"] external arb_one_of : array(arbitrary('a)) => arbitrary('a) = "oneof";
+
+  [@bs.module "jsverify"] external arb_fn : arbitrary('a) => arbitrary('b => 'a) = "asciinestring";
+
+  [@bs.module "jsverify"] external arb_tuple :
+    (arbitrary('a), arbitrary('b)) => arbitrary(('a, 'b)) = "tuple";
+
+  [@bs.module "jsverify"] external arb_tuple' :
+    (arbitrary('a), arbitrary('b), arbitrary('c)) => arbitrary(('a, 'b, 'c)) = "tuple";
+
+  [@bs.module "jsverify"] external arb_tuple'' :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    ) => arbitrary(('a, 'b, 'c, 'd)) = "tuple";
+
+  /* Combines several arbitraries (as an untagged union)
+   * This is represented as an abstract type `sum('a)`. You'll need to use reflection in
+   * order to get the value out (see the `Js.Types` module)
+   */
+  [@bs.module "jsverify"] external arb_sum :
+    (arbitrary('a), arbitrary('b)) => arbitrary(sum(('a, 'b))) = "sum";
+  [@bs.module "jsverify"] external arb_sum' :
+    (arbitrary('a), arbitrary('b), arbitrary('c)) => arbitrary(sum(('a, 'b, 'c))) = "sum";
+  [@bs.module "jsverify"] external arb_sum'' :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    ) => arbitrary(sum(('a, 'b, 'c, 'd))) = "sum";
+};
+
+
+module Generator = {
+  type generator('a) = int => 'a;
+
+  [@b.send.pipe : generator('a)] external bless : (int => 'a) => generator('a) = "bless";
+
+  [@b.send.pipe : generator('a)] external map : ('a => 'b) => generator('b) = "map";
+
+  [@b.send.pipe : generator('a)] external flatmap : ('a => generator('b)) => generator('b) = "flatmap";
+
+  [@b.send.pipe : generator('a)] external constant : 'b => generator('b) = "constant";
+};
+
+
+module Shrink = {
+  type shrink('a) = 'a => array('a);
+
+  [@b.send.pipe : shrink('a)] external bless : ('a => array('a)) => shrink('a) = "bless";
+
+  [@b.send.pipe : shrink('a)] external smap : ('a => 'b, 'b => 'a) => shrink('b) = "smap";
+
+};
+
+
+module Property = {
+  type arbitrary('a) = Arbitrary.arbitrary('a);
+  type sum('a) = Arbitrary.sum('a);
+
+  type property('a);
+  type async_property('a);
+
+  type abs_result('a);
+  type result('a) = {.
+    "counterexample": 'a,
+    "tests": int,
+    "shrinks": int,
+    "exc": Js.nullable(Js.Exn.t),
+    "rngState": string
+  };
+
+  type check_options = {.
+    "tests": Js.nullable(int),
+    "size": Js.nullable(int),
+    "quiet": Js.nullable(Js.boolean),
+    "rngState": Js.nullable(string)
+  };
+
+  let options:
+    (~tests:int=?, ~size:int=?, ~quiet:Js.boolean=?, ~rngState:string=?, unit) => check_options =
+    (~tests=?, ~size=?, ~quiet=?, ~rngState=?, _) => {
+      "tests": tests |> Js.Nullable.from_opt,
+      "size": size |> Js.Nullable.from_opt,
+      "quiet": quiet |> Js.Nullable.from_opt,
+      "rngState": rngState |> Js.Nullable.from_opt
+    };
+
+  /* Convert the abstract result type coming from the API untagged to a more usable form */
+  let to_result: abs_result('a) => option(result('a)) = (result) => {
+    switch (Js.Types.classify(result)) {
+    | Js.Types.JSObject(value) => Some(Obj.magic(value))
+    | _ => None
+    };
+  };
+
+
+  [@bs.module "jsverify"] external check :
+    (~prop:property('a), ~options:check_options=?, unit) => abs_result('a) = "check";
+
+  [@bs.module "jsverify"] external check' :
+    (~prop:async_property('a), ~options:check_options=?, unit) => Js.Promise.t(abs_result('a)) = "check";
+
+  [@bs.module "jsverify"] external assert' :
+    (~prop:property('a), ~options:check_options=?, unit) => unit = "assert";
+
+  [@bs.module "jsverify"] external assert'' :
+    (~prop:async_property('a), ~options:check_options=?, unit) => unit = "assert";
+
+
+  /* * * * * * * * * * * * * * *
+   * `forall` with Js.boolean  *
+   * * * * * * * * * * * * * * */
+  [@bs.module "jsverify"] external forall1' :
+    (arbitrary('a), 'a => Js.boolean) => property('a) = "forall";
+
+  [@bs.module "jsverify"] external forall2' :
+    ( arbitrary('a), arbitrary('b), ('a, 'b) => Js.boolean
+    ) => property(sum(('a, 'b))) = "forall";
+
+  [@bs.module "jsverify"] external forall3' :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), ('a, 'b, 'c) => Js.boolean
+    ) => property(sum(('a, 'b, 'c))) = "forall";
+
+  [@bs.module "jsverify"] external forall4' :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    , ('a, 'b, 'c, 'd) => Js.boolean
+    ) => property(sum(('a, 'b, 'c, 'd))) = "forall";
+
+  [@bs.module "jsverify"] external forall5' :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d), arbitrary('e)
+    , ('a, 'b, 'c, 'd, 'e) => Js.boolean
+    ) => property(sum(('a, 'b, 'c, 'd, 'e))) = "forall";
+
+
+  /* * * * * * * * * * * * * * * * * * *
+   * `forall` with Js.boolean (async)  *
+   * * * * * * * * * * * * * * * * * * */
+  [@bs.module "jsverify"] external async_forall1 :
+    (arbitrary('a), 'a => Js.Promise.t(Js.boolean)) => async_property('a) = "forall";
+
+  [@bs.module "jsverify"] external async_forall2 :
+    ( arbitrary('a), arbitrary('b), ('a, 'b) => Js.Promise.t(Js.boolean)
+    ) => async_property(sum(('a, 'b))) = "forall";
+
+  [@bs.module "jsverify"] external async_forall3 :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), ('a, 'b, 'c) => Js.Promise.t(Js.boolean)
+    ) => async_property(sum(('a, 'b, 'c))) = "forall";
+
+  [@bs.module "jsverify"] external async_forall4 :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    , ('a, 'b, 'c, 'd) => Js.Promise.t(Js.boolean)
+    ) => async_property(sum(('a, 'b, 'c, 'd))) = "forall";
+
+  [@bs.module "jsverify"] external async_forall5 :
+    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d), arbitrary('e)
+    , ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(Js.boolean)
+    ) => async_property(sum(('a, 'b, 'c, 'd, 'e))) = "forall";
+
+
+  /* * * * * * * * * * * * * * * * * * * * *
+   * `forall` with bool (for convenience)  *
+   * * * * * * * * * * * * * * * * * * * * */
+  let forall1 = (a1, fn) => forall1'(a1, (a) => fn(a) |> Js.Boolean.to_js_boolean);
+
+  let forall2 = (a1, a2, fn) =>
+    forall2'(a1, a2, (a, b) => fn(a, b) |> Js.Boolean.to_js_boolean);
+
+  let forall3 = (a1, a2, a3, fn) =>
+    forall3'(a1, a2, a3, (a, b, c) => fn(a, b, c) |> Js.Boolean.to_js_boolean);
+
+  let forall4 = (a1, a2, a3, a4, fn) =>
+    forall4'(a1, a2, a3, a4, (a, b, c, d) => fn(a, b, c, d) |> Js.Boolean.to_js_boolean);
+
+  let forall5 = (a1, a2, a3, a4, a5, fn) =>
+    forall5'(a1, a2, a3, a4, a5, (a, b, c, d, e) => fn(a, b, c, d, e) |> Js.Boolean.to_js_boolean);
+
+
+  /* * * * * * * * * * * * * * * *
+   * `property` with Js.boolean  *
+   * * * * * * * * * * * * * * * */
+  [@bs.module "jsverify"] external property1' :
+    (string, arbitrary('a), 'a => Js.boolean) => unit = "property";
+
+  [@bs.module "jsverify"] external property2' :
+    ( string, arbitrary('a), arbitrary('b), ('a, 'b) => Js.boolean
+    ) => unit = "property";
+
+  [@bs.module "jsverify"] external property3' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c), ('a, 'b, 'c) => Js.boolean
+    ) => unit = "property";
+
+  [@bs.module "jsverify"] external property4' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    , ('a, 'b, 'c, 'd) => Js.boolean
+    ) => unit = "property";
+
+  [@bs.module "jsverify"] external property5' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d), arbitrary('e)
+    , ('a, 'b, 'c, 'd, 'e) => Js.boolean
+    ) => unit = "property";
+
+
+  /* * * * * * * * * * * * * * * * * * * * * *
+   * `property` with bool (for convenience)  *
+   * * * * * * * * * * * * * * * * * * * * * */
+  let property1 = (s, a1, fn) =>
+    property1'(s, a1, (a) => fn(a) |> Js.Boolean.to_js_boolean);
+
+  let property2 = (s, a1, a2, fn) =>
+    property2'(s, a1, a2, (a, b) => fn(a, b) |> Js.Boolean.to_js_boolean);
+
+  let property3 = (s, a1, a2, a3, fn) =>
+    property3'(s, a1, a2, a3, (a, b, c) => fn(a, b, c) |> Js.Boolean.to_js_boolean);
+
+  let property4 = (s, a1, a2, a3, a4, fn) =>
+    property4'(s, a1, a2, a3, a4, (a, b, c, d) => fn(a, b, c, d) |> Js.Boolean.to_js_boolean);
+
+  let property5 = (s, a1, a2, a3, a4, a5, fn) =>
+    property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) => fn(a, b, c, d, e) |> Js.Boolean.to_js_boolean);
+};

@@ -26,3 +26,4 @@ lib/bs
 .merlin
 .bsb.lock
 node_modules
+lib

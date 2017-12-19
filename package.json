@@ -1,0 +1,22 @@
+{
+  "name": "bs-jsverify",
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "bsb -clean-world",
+    "build": "bsb -make-world",
+    "watch": "bsb -make-world -w",
+    "test": "./node_modules/.bin/mocha -C lib/js/test/Test_Verify.bs.js"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "Risto Stevcev",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "bs-platform": "^2.1.0",
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {
+    "jsverify": "^0.8.3"
+  }
+}
