@@ -85,13 +85,13 @@ module Arbitrary = {
   [@bs.module "jsverify"] external arb_fn : arbitrary('a) => arbitrary('b => 'a) = "asciinestring";
 
   [@bs.module "jsverify"] external arb_tuple :
-    (arbitrary('a), arbitrary('b)) => arbitrary(('a, 'b)) = "tuple";
+    ((arbitrary('a), arbitrary('b))) => arbitrary(('a, 'b)) = "tuple";
 
   [@bs.module "jsverify"] external arb_tuple' :
-    (arbitrary('a), arbitrary('b), arbitrary('c)) => arbitrary(('a, 'b, 'c)) = "tuple";
+    ((arbitrary('a), arbitrary('b), arbitrary('c))) => arbitrary(('a, 'b, 'c)) = "tuple";
 
   [@bs.module "jsverify"] external arb_tuple'' :
-    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    ( (arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d))
     ) => arbitrary(('a, 'b, 'c, 'd)) = "tuple";
 
   /* Combines several arbitraries (as an untagged union)
@@ -99,12 +99,13 @@ module Arbitrary = {
    * order to get the value out (see the `Js.Types` module)
    */
   [@bs.module "jsverify"] external arb_sum :
-    (arbitrary('a), arbitrary('b)) => arbitrary(sum(('a, 'b))) = "sum";
+    ((arbitrary('a), arbitrary('b))) => arbitrary(sum(('a, 'b))) = "oneof";
   [@bs.module "jsverify"] external arb_sum' :
-    (arbitrary('a), arbitrary('b), arbitrary('c)) => arbitrary(sum(('a, 'b, 'c))) = "sum";
+    ((arbitrary('a), arbitrary('b), arbitrary('c))) =>
+      arbitrary(sum(('a, 'b, 'c))) = "oneof";
   [@bs.module "jsverify"] external arb_sum'' :
-    ( arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
-    ) => arbitrary(sum(('a, 'b, 'c, 'd))) = "sum";
+    ( (arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d))
+    ) => arbitrary(sum(('a, 'b, 'c, 'd))) = "oneof";
 };
 
 

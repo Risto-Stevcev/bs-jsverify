@@ -19,5 +19,17 @@ describe("JsVerify", () => {
 
   property1("sum of nats is >= 0", arb_array(arb_nat), (a) => {
     Array.fold_left((+), 0, a) >= 0
+  });
+
+  property1("testing tuple", arb_tuple((arb_nat, arb_nat)), ((a, b)) => {
+    a + b >= a && a + b >= b
+  });
+
+  property1("testing sum", arb_sum((arb_nat, arb_string)), (s) => {
+    switch (Js.Types.classify(s)) {
+    | Js.Types.JSString(_) => true
+    | Js.Types.JSNumber(_) => true
+    | _ => false
+    }
   })
 });
