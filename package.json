@@ -1,6 +1,13 @@
 {
   "name": "bs-jsverify",
   "version": "0.2.0",
+  "description": "Jsverify bindings for bucklescript",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Risto-Stevcev/bs-jsverify.git"
+  },
+  "homepage": "https://github.com/Risto-Stevcev/bs-jsverify",
+  "bugs": "https://github.com/Risto-Stevcev/bs-jsverify/issues",
   "scripts": {
     "clean": "bsb -clean-world",
     "build": "bsb -make-world",
@@ -8,7 +15,7 @@
     "test": "./node_modules/.bin/mocha -C lib/js/test/Test_Verify.bs.js"
   },
   "keywords": [
-    "BuckleScript"
+    "BuckleScript", "reason"
   ],
   "author": "Risto Stevcev",
   "license": "BSD-3-Clause",
