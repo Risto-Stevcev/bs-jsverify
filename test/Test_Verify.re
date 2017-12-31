@@ -1,11 +1,7 @@
-open Mocha;
+open BsMochajs.Mocha;
 open Verify.Arbitrary;
 open Verify.Property;
 
-describe("Mocha Bindings", () => {
-  it("2 + 3 is 5", () => expect(2 + 3).to_be(5));
-  it("2 + 3 is not 4", () => expect(2 + 3).to_not_be(4));
-});
 
 describe("JsVerify", () => {
   property1("boolean `not` (involution)", arb_js_bool, b => {

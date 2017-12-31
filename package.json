@@ -15,11 +15,13 @@
     "test": "./node_modules/.bin/mocha lib/js/test/Test*.js"
   },
   "keywords": [
-    "BuckleScript", "reason"
+    "BuckleScript",
+    "reason"
   ],
   "author": "Risto Stevcev",
   "license": "BSD-3-Clause",
   "devDependencies": {
+    "bs-mochajs": "git+https://github.com/Risto-Stevcev/bs-mochajs.git",
     "bs-platform": "^2.1.0",
     "mocha": "^4.0.1"
   },
