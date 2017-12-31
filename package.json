@@ -12,7 +12,7 @@
     "clean": "bsb -clean-world",
     "build": "bsb -make-world",
     "watch": "bsb -make-world -w",
-    "test": "./node_modules/.bin/mocha -C lib/js/test/Test_Verify.bs.js"
+    "test": "./node_modules/.bin/mocha lib/js/test/Test*.js"
   },
   "keywords": [
     "BuckleScript", "reason"

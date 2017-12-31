@@ -12,12 +12,30 @@ module Arbitrary = {
     "show": 'a => string
   };
 
+  module Types = {
+    type proxy('a) = Proxy;
+
+    type either('a, 'b) = Left('a) | Right('b);
+    let either: ('a => 'c, 'b => 'c, either('a, 'b)) => 'c =
+      (left_fn, right_fn, e) => switch e {
+        | Left(l) => left_fn(l)
+        | Right(r) => right_fn(r)
+        };
+    let left: 'a => either('a, 'b) = l => Left(l);
+    let right: 'b => either('a, 'b) = r => Right(r);
+    let bimap: ('a => 'c, 'b => 'd, either('a, 'b)) => either('b, 'd) =
+      (left_fn, right_fn, e) => switch e {
+        | Left(l) => Left(left_fn(l))
+        | Right(r) => Right(right_fn(r))
+        };
+  };
+
 
   [@bs.module "jsverify"] external sampler :
     (~arb:arbitrary('a), ~genSize:int=?, unit) => 'a = "sampler";
 
-  [@b.send : arbitrary('a)] external smap :
-    ('a => 'b, 'b => 'a, ~newShow:('b => string)=?) => arbitrary('b) = "smap";
+  [@bs.send.pipe : arbitrary('a)] external smap :
+    ('a => 'b, 'b => 'a, ~newShow:('b => string)=?) => arbitrary('b) = "";
 
   [@bs.module "jsverify"] external bless :
     {.. "generator": int => 'a} => arbitrary('a) = "bless";
@@ -26,7 +44,10 @@ module Arbitrary = {
   /* * * * * * * * * *
    * For primitives  *
    * * * * * * * * * */
-  [@bs.module "jsverify"] external arb_bool : arbitrary(Js.boolean) = "bool";
+  [@bs.module "jsverify"] external arb_js_bool : arbitrary(Js.boolean) = "bool";
+
+  let arb_bool : arbitrary(bool) =
+    smap(Js.to_bool, a => a ? Js.true_ : Js.false_, ~newShow=string_of_bool, arb_js_bool);
 
   [@bs.module "jsverify"] external arb_nat : arbitrary(int) = "nat";
 
@@ -50,6 +71,11 @@ module Arbitrary = {
     arbitrary('a) => arbitrary(array('a)) = "nearray";
 
   [@bs.module "jsverify"] external arb_date : arbitrary(Js.Date.t) = "datetime";
+
+  let arb_list : arbitrary('a) => arbitrary(list('a)) =
+    (a) => smap(Array.to_list, Array.of_list, ~newShow=(l) => {
+      Js.Json.stringifyAny(Array.of_list(l)) |> Js.Option.getWithDefault("")
+    }, arb_array(a));
 
 
   /* * * * * * * *
@@ -94,6 +120,13 @@ module Arbitrary = {
     ( (arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d))
     ) => arbitrary(('a, 'b, 'c, 'd)) = "tuple";
 
+  [@bs.module "jsverify"] external unsafe_arb_record :
+    ( [@bs.ignore] Types.proxy(Js.t('a)) /* set the record type as key: value */,
+      Js.t('b) /* set the record type as key: arbitrary(value) */
+    ) => arbitrary(Js.t('a)) = "record";
+
+
+
   /* Combines several arbitraries (as an untagged union)
    * This is represented as an abstract type `sum('a)`. You'll need to use reflection in
    * order to get the value out (see the `Js.Types` module)
@@ -106,6 +139,54 @@ module Arbitrary = {
   [@bs.module "jsverify"] external arb_sum'' :
     ( (arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d))
     ) => arbitrary(sum(('a, 'b, 'c, 'd))) = "oneof";
+
+  let arb_null : arbitrary('a) => arbitrary(Js.null('a)) = arb => {
+    let null: Js.null('a) = Js.null;
+    Obj.magic(arb_sum((arb, arb_constant(null))))
+  };
+
+  let arb_nullable : arbitrary('a) => arbitrary(Js.nullable('a)) = arb => {
+    let null: Js.nullable('a) = Js.Nullable.null;
+    let undefined: Js.nullable('a) = Js.Nullable.undefined;
+    Obj.magic(arb_sum'((arb, arb_constant(null), arb_constant(undefined))))
+  };
+
+  let arb_option : arbitrary('a) => arbitrary(option('a)) =
+    arb => smap(
+      Js.Null.to_opt, Js.Null.from_opt,
+      ~newShow = a => switch a {
+        | Some(a') =>
+          "Some("++ (Js.Json.stringifyAny(a') |> Js.Option.getWithDefault("")) ++")"
+        | None => "None"
+      },
+      arb_null(arb)
+    );
+
+  let arb_either : (arbitrary('a), arbitrary('b)) => arbitrary(Types.either('a, 'b)) =
+    (arb_a, arb_b) => {
+      smap(
+        r => {
+          let is_left: sum(({."left":'a}, {."right":'b})) => bool = [%bs.raw {|
+            function(r) { return r.left !== undefined ? 1 : 0 }
+          |}];
+          is_left(r) ? Types.Left(Obj.magic(r)##left) : Types.Right(Obj.magic(r)##right);
+        },
+        e => switch e {
+        | Types.Left(l) => Obj.magic({"left": l})
+        | Types.Right(r) => Obj.magic({"right": r})
+        },
+        ~newShow = e => switch e {
+        | Left(l') =>
+          "Left("++ (Js.Json.stringifyAny(l') |> Js.Option.getWithDefault("")) ++")"
+        | Right(r') =>
+          "Right("++ (Js.Json.stringifyAny(r') |> Js.Option.getWithDefault("")) ++")"
+        },
+        arb_sum((
+          unsafe_arb_record((Proxy: Types.proxy({."left": 'a})),  {"left": arb_a}),
+          unsafe_arb_record((Proxy: Types.proxy({."right": 'b})), {"right": arb_b})
+        ))
+      )
+    };
 };
 
 
