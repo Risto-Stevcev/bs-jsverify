@@ -21,7 +21,7 @@
   "author": "Risto Stevcev",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "bs-mochajs": "git+https://github.com/Risto-Stevcev/bs-mochajs.git",
+    "bs-mochajs": "^0.1.0",
     "bs-platform": "^2.1.0",
     "mocha": "^4.0.1"
   },
