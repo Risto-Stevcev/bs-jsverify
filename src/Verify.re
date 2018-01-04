@@ -341,12 +341,24 @@ module Property = {
   [@bs.module "jsverify"] external property1' :
     (string, arbitrary('a), 'a => Js.boolean) => unit = "property";
 
+  [@bs.module "jsverify"] external async_property1' :
+    (string, arbitrary('a), 'a => Js.Promise.t(Js.boolean)) => unit = "property";
+
   [@bs.module "jsverify"] external property2' :
     ( string, arbitrary('a), arbitrary('b), ('a, 'b) => Js.boolean
     ) => unit = "property";
 
+  [@bs.module "jsverify"] external async_property2' :
+    ( string, arbitrary('a), arbitrary('b), ('a, 'b) => Js.Promise.t(Js.boolean)
+    ) => unit = "property";
+
   [@bs.module "jsverify"] external property3' :
     ( string, arbitrary('a), arbitrary('b), arbitrary('c), ('a, 'b, 'c) => Js.boolean
+    ) => unit = "property";
+
+  [@bs.module "jsverify"] external async_property3' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c),
+      ('a, 'b, 'c) => Js.Promise.t(Js.boolean)
     ) => unit = "property";
 
   [@bs.module "jsverify"] external property4' :
@@ -354,9 +366,19 @@ module Property = {
     , ('a, 'b, 'c, 'd) => Js.boolean
     ) => unit = "property";
 
+  [@bs.module "jsverify"] external async_property4' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d)
+    , ('a, 'b, 'c, 'd) => Js.Promise.t(Js.boolean)
+    ) => unit = "property";
+
   [@bs.module "jsverify"] external property5' :
     ( string, arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d), arbitrary('e)
     , ('a, 'b, 'c, 'd, 'e) => Js.boolean
+    ) => unit = "property";
+
+  [@bs.module "jsverify"] external async_property5' :
+    ( string, arbitrary('a), arbitrary('b), arbitrary('c), arbitrary('d), arbitrary('e)
+    , ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(Js.boolean)
     ) => unit = "property";
 
 
@@ -366,15 +388,43 @@ module Property = {
   let property1 = (s, a1, fn) =>
     property1'(s, a1, (a) => fn(a) |> Js.Boolean.to_js_boolean);
 
+  let async_property1 = (s, a1, fn) =>
+    async_property1'(s, a1, (a) => {
+      fn(a) |> Js.Promise.then_(x => x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve)
+    });
+
   let property2 = (s, a1, a2, fn) =>
     property2'(s, a1, a2, (a, b) => fn(a, b) |> Js.Boolean.to_js_boolean);
+
+  let async_property2 = (s, a1, a2, fn) =>
+    async_property2'(s, a1, a2, (a, b) => {
+      fn(a, b) |> Js.Promise.then_(x => x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve)
+    });
 
   let property3 = (s, a1, a2, a3, fn) =>
     property3'(s, a1, a2, a3, (a, b, c) => fn(a, b, c) |> Js.Boolean.to_js_boolean);
 
+  let async_property3 = (s, a1, a2, a3, fn) =>
+    async_property3'(s, a1, a2, a3, (a, b, c) => {
+      fn(a, b, c)
+        |> Js.Promise.then_(x => x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve)
+    });
+
   let property4 = (s, a1, a2, a3, a4, fn) =>
     property4'(s, a1, a2, a3, a4, (a, b, c, d) => fn(a, b, c, d) |> Js.Boolean.to_js_boolean);
 
+  let async_property4 = (s, a1, a2, a3, a4, fn) =>
+    async_property4'(s, a1, a2, a3, a4, (a, b, c, d) => {
+      fn(a, b, c, d)
+        |> Js.Promise.then_(x => x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve)
+    });
+
   let property5 = (s, a1, a2, a3, a4, a5, fn) =>
     property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) => fn(a, b, c, d, e) |> Js.Boolean.to_js_boolean);
+
+  let async_property5 = (s, a1, a2, a3, a4, a5, fn) =>
+    async_property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) => {
+      fn(a, b, c, d, e)
+        |> Js.Promise.then_(x => x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve)
+    });
 };
