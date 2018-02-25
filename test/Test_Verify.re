@@ -1,4 +1,4 @@
-open BsMochajs.Mocha;
+open BsMocha.Mocha;
 open Verify.Arbitrary;
 open Verify.Property;
 

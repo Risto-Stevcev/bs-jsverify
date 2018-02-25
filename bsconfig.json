@@ -16,5 +16,5 @@
   },
   "suffix": ".bs.js",
   "bsc-flags": ["-bs-super-errors"],
-  "bs-dev-dependencies": ["bs-mochajs"]
+  "bs-dev-dependencies": ["bs-mocha"]
 }
