@@ -153,7 +153,7 @@ module Arbitrary = {
 
   let arb_option : arbitrary('a) => arbitrary(option('a)) =
     arb => smap(
-      Js.Null.to_opt, Js.Null.from_opt,
+      Js.Null.toOption, Js.Null.fromOption,
       ~newShow = a => switch a {
         | Some(a') =>
           "Some("++ (Js.Json.stringifyAny(a') |> Js.Option.getWithDefault("")) ++")"
@@ -239,10 +239,10 @@ module Property = {
   let options:
     (~tests:int=?, ~size:int=?, ~quiet:Js.boolean=?, ~rngState:string=?, unit) => check_options =
     (~tests=?, ~size=?, ~quiet=?, ~rngState=?, _) => {
-      "tests": tests |> Js.Nullable.from_opt,
-      "size": size |> Js.Nullable.from_opt,
-      "quiet": quiet |> Js.Nullable.from_opt,
-      "rngState": rngState |> Js.Nullable.from_opt
+      "tests": tests |> Js.Nullable.fromOption,
+      "size": size |> Js.Nullable.fromOption,
+      "quiet": quiet |> Js.Nullable.fromOption,
+      "rngState": rngState |> Js.Nullable.fromOption
     };
 
   /* Convert the abstract result type coming from the API untagged to a more usable form */

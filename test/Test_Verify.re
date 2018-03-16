@@ -18,11 +18,11 @@ describe("JsVerify", () => {
   });
 
   property1("Js.null(nat)", arb_null(arb_nat), n => {
-    switch (Js.Null.to_opt(n)) { | Some(n') => n' >= 0 | None => true }
+    switch (Js.Null.toOption(n)) { | Some(n') => n' >= 0 | None => true }
   });
 
   property1("Js.nullable(nat)", arb_nullable(arb_nat), n => {
-    switch (Js.Nullable.to_opt(n)) { | Some(n') => n' >= 0 | None => true }
+    switch (Js.Nullable.toOption(n)) { | Some(n') => n' >= 0 | None => true }
   });
 
   property1("option(nat)", arb_option(arb_nat), n => {
