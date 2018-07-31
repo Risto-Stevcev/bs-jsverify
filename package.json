@@ -22,7 +22,7 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "bs-mocha": "^0.3.0",
-    "bs-platform": "^2.2.2",
+    "bs-platform": "^4.0.0",
     "mocha": "^4.1.0"
   },
   "dependencies": {
