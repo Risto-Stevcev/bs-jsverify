@@ -2,7 +2,7 @@ module Arbitrary = {
   /* This abstract type is used to represent a disjoint union
    * It's parameter takes a tuple of the possible types that it is, ie:
    * sum((string, int));  // a disjoint union of `string` or `int`
-   * sum((Js.boolean, string, array(int)));
+   * sum((bool, string, array(int)));
    */
   type sum('a);
 
@@ -51,13 +51,12 @@ module Arbitrary = {
   /* * * * * * * * * *
    * For primitives  *
    * * * * * * * * * */
-  [@bs.module "jsverify"]
-  external arb_js_bool : arbitrary(Js.boolean) = "bool";
+  [@bs.module "jsverify"] external arb_js_bool : arbitrary(bool) = "bool";
 
   let arb_bool: arbitrary(bool) =
     smap(
-      Js.to_bool,
-      a => a ? Js.true_ : Js.false_,
+      x => x,
+      a => a ? true : false,
       ~newShow=string_of_bool,
       arb_js_bool,
     );
@@ -133,7 +132,7 @@ module Arbitrary = {
   external arb_small : arbitrary('a) => arbitrary('a) = "small";
 
   [@bs.module "jsverify"]
-  external arb_such_that : (arbitrary('a), 'a => Js.boolean) => arbitrary('a) =
+  external arb_such_that : (arbitrary('a), 'a => bool) => arbitrary('a) =
     "suchthat";
 
   [@bs.module "jsverify"]
@@ -314,18 +313,12 @@ module Property = {
     .
     "tests": Js.nullable(int),
     "size": Js.nullable(int),
-    "quiet": Js.nullable(Js.boolean),
+    "quiet": Js.nullable(bool),
     "rngState": Js.nullable(string),
   };
 
   let options:
-    (
-      ~tests: int=?,
-      ~size: int=?,
-      ~quiet: Js.boolean=?,
-      ~rngState: string=?,
-      unit
-    ) =>
+    (~tests: int=?, ~size: int=?, ~quiet: bool=?, ~rngState: string=?, unit) =>
     check_options =
     (~tests=?, ~size=?, ~quiet=?, ~rngState=?, _) => {
       "tests": tests |> Js.Nullable.fromOption,
@@ -364,26 +357,20 @@ module Property = {
     "assert";
 
   /* * * * * * * * * * * * * * *
-   * `forall` with Js.boolean  *
+   * `forall` with bool  *
    * * * * * * * * * * * * * * */
   [@bs.module "jsverify"]
-  external forall1' : (arbitrary('a), 'a => Js.boolean) => property('a) =
-    "forall";
+  external forall1' : (arbitrary('a), 'a => bool) => property('a) = "forall";
 
   [@bs.module "jsverify"]
   external forall2' :
-    (arbitrary('a), arbitrary('b), ('a, 'b) => Js.boolean) =>
+    (arbitrary('a), arbitrary('b), ('a, 'b) => bool) =>
     property(sum(('a, 'b))) =
     "forall";
 
   [@bs.module "jsverify"]
   external forall3' :
-    (
-      arbitrary('a),
-      arbitrary('b),
-      arbitrary('c),
-      ('a, 'b, 'c) => Js.boolean
-    ) =>
+    (arbitrary('a), arbitrary('b), arbitrary('c), ('a, 'b, 'c) => bool) =>
     property(sum(('a, 'b, 'c))) =
     "forall";
 
@@ -394,7 +381,7 @@ module Property = {
       arbitrary('b),
       arbitrary('c),
       arbitrary('d),
-      ('a, 'b, 'c, 'd) => Js.boolean
+      ('a, 'b, 'c, 'd) => bool
     ) =>
     property(sum(('a, 'b, 'c, 'd))) =
     "forall";
@@ -407,22 +394,22 @@ module Property = {
       arbitrary('c),
       arbitrary('d),
       arbitrary('e),
-      ('a, 'b, 'c, 'd, 'e) => Js.boolean
+      ('a, 'b, 'c, 'd, 'e) => bool
     ) =>
     property(sum(('a, 'b, 'c, 'd, 'e))) =
     "forall";
 
   /* * * * * * * * * * * * * * * * * * *
-   * `forall` with Js.boolean (async)  *
+   * `forall` with bool (async)  *
    * * * * * * * * * * * * * * * * * * */
   [@bs.module "jsverify"]
   external async_forall1 :
-    (arbitrary('a), 'a => Js.Promise.t(Js.boolean)) => async_property('a) =
+    (arbitrary('a), 'a => Js.Promise.t(bool)) => async_property('a) =
     "forall";
 
   [@bs.module "jsverify"]
   external async_forall2 :
-    (arbitrary('a), arbitrary('b), ('a, 'b) => Js.Promise.t(Js.boolean)) =>
+    (arbitrary('a), arbitrary('b), ('a, 'b) => Js.Promise.t(bool)) =>
     async_property(sum(('a, 'b))) =
     "forall";
 
@@ -432,7 +419,7 @@ module Property = {
       arbitrary('a),
       arbitrary('b),
       arbitrary('c),
-      ('a, 'b, 'c) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c) => Js.Promise.t(bool)
     ) =>
     async_property(sum(('a, 'b, 'c))) =
     "forall";
@@ -444,7 +431,7 @@ module Property = {
       arbitrary('b),
       arbitrary('c),
       arbitrary('d),
-      ('a, 'b, 'c, 'd) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c, 'd) => Js.Promise.t(bool)
     ) =>
     async_property(sum(('a, 'b, 'c, 'd))) =
     "forall";
@@ -457,7 +444,7 @@ module Property = {
       arbitrary('c),
       arbitrary('d),
       arbitrary('e),
-      ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(bool)
     ) =>
     async_property(sum(('a, 'b, 'c, 'd, 'e))) =
     "forall";
@@ -465,42 +452,34 @@ module Property = {
   /* * * * * * * * * * * * * * * * * * * * *
    * `forall` with bool (for convenience)  *
    * * * * * * * * * * * * * * * * * * * * */
-  let forall1 = (a1, fn) =>
-    forall1'(a1, a => fn(a) |> Js.Boolean.to_js_boolean);
+  let forall1 = (a1, fn) => forall1'(a1, a => fn(a));
 
-  let forall2 = (a1, a2, fn) =>
-    forall2'(a1, a2, (a, b) => fn(a, b) |> Js.Boolean.to_js_boolean);
+  let forall2 = (a1, a2, fn) => forall2'(a1, a2, (a, b) => fn(a, b));
 
   let forall3 = (a1, a2, a3, fn) =>
-    forall3'(a1, a2, a3, (a, b, c) =>
-      fn(a, b, c) |> Js.Boolean.to_js_boolean
-    );
+    forall3'(a1, a2, a3, (a, b, c) => fn(a, b, c));
 
   let forall4 = (a1, a2, a3, a4, fn) =>
-    forall4'(a1, a2, a3, a4, (a, b, c, d) =>
-      fn(a, b, c, d) |> Js.Boolean.to_js_boolean
-    );
+    forall4'(a1, a2, a3, a4, (a, b, c, d) => fn(a, b, c, d));
 
   let forall5 = (a1, a2, a3, a4, a5, fn) =>
-    forall5'(a1, a2, a3, a4, a5, (a, b, c, d, e) =>
-      fn(a, b, c, d, e) |> Js.Boolean.to_js_boolean
-    );
+    forall5'(a1, a2, a3, a4, a5, (a, b, c, d, e) => fn(a, b, c, d, e));
 
   /* * * * * * * * * * * * * * * *
-   * `property` with Js.boolean  *
+   * `property` with bool  *
    * * * * * * * * * * * * * * * */
   [@bs.module "jsverify"]
-  external property1' : (string, arbitrary('a), 'a => Js.boolean) => unit =
+  external property1' : (string, arbitrary('a), 'a => bool) => unit =
     "property";
 
   [@bs.module "jsverify"]
   external async_property1' :
-    (string, arbitrary('a), 'a => Js.Promise.t(Js.boolean)) => unit =
+    (string, arbitrary('a), 'a => Js.Promise.t(bool)) => unit =
     "property";
 
   [@bs.module "jsverify"]
   external property2' :
-    (string, arbitrary('a), arbitrary('b), ('a, 'b) => Js.boolean) => unit =
+    (string, arbitrary('a), arbitrary('b), ('a, 'b) => bool) => unit =
     "property";
 
   [@bs.module "jsverify"]
@@ -509,7 +488,7 @@ module Property = {
       string,
       arbitrary('a),
       arbitrary('b),
-      ('a, 'b) => Js.Promise.t(Js.boolean)
+      ('a, 'b) => Js.Promise.t(bool)
     ) =>
     unit =
     "property";
@@ -521,7 +500,7 @@ module Property = {
       arbitrary('a),
       arbitrary('b),
       arbitrary('c),
-      ('a, 'b, 'c) => Js.boolean
+      ('a, 'b, 'c) => bool
     ) =>
     unit =
     "property";
@@ -533,7 +512,7 @@ module Property = {
       arbitrary('a),
       arbitrary('b),
       arbitrary('c),
-      ('a, 'b, 'c) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c) => Js.Promise.t(bool)
     ) =>
     unit =
     "property";
@@ -546,7 +525,7 @@ module Property = {
       arbitrary('b),
       arbitrary('c),
       arbitrary('d),
-      ('a, 'b, 'c, 'd) => Js.boolean
+      ('a, 'b, 'c, 'd) => bool
     ) =>
     unit =
     "property";
@@ -559,7 +538,7 @@ module Property = {
       arbitrary('b),
       arbitrary('c),
       arbitrary('d),
-      ('a, 'b, 'c, 'd) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c, 'd) => Js.Promise.t(bool)
     ) =>
     unit =
     "property";
@@ -573,7 +552,7 @@ module Property = {
       arbitrary('c),
       arbitrary('d),
       arbitrary('e),
-      ('a, 'b, 'c, 'd, 'e) => Js.boolean
+      ('a, 'b, 'c, 'd, 'e) => bool
     ) =>
     unit =
     "property";
@@ -587,7 +566,7 @@ module Property = {
       arbitrary('c),
       arbitrary('d),
       arbitrary('e),
-      ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(Js.boolean)
+      ('a, 'b, 'c, 'd, 'e) => Js.Promise.t(bool)
     ) =>
     unit =
     "property";
@@ -595,64 +574,42 @@ module Property = {
   /* * * * * * * * * * * * * * * * * * * * * *
    * `property` with bool (for convenience)  *
    * * * * * * * * * * * * * * * * * * * * * */
-  let property1 = (s, a1, fn) =>
-    property1'(s, a1, a => fn(a) |> Js.Boolean.to_js_boolean);
+  let property1 = (s, a1, fn) => property1'(s, a1, a => fn(a));
 
   let async_property1 = (s, a1, fn) =>
     async_property1'(s, a1, a =>
-      fn(a)
-      |> Js.Promise.then_(x =>
-           x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve
-         )
+      fn(a) |> Js.Promise.then_(x => x |> Js.Promise.resolve)
     );
 
   let property2 = (s, a1, a2, fn) =>
-    property2'(s, a1, a2, (a, b) => fn(a, b) |> Js.Boolean.to_js_boolean);
+    property2'(s, a1, a2, (a, b) => fn(a, b));
 
   let async_property2 = (s, a1, a2, fn) =>
     async_property2'(s, a1, a2, (a, b) =>
-      fn(a, b)
-      |> Js.Promise.then_(x =>
-           x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve
-         )
+      fn(a, b) |> Js.Promise.then_(x => x |> Js.Promise.resolve)
     );
 
   let property3 = (s, a1, a2, a3, fn) =>
-    property3'(s, a1, a2, a3, (a, b, c) =>
-      fn(a, b, c) |> Js.Boolean.to_js_boolean
-    );
+    property3'(s, a1, a2, a3, (a, b, c) => fn(a, b, c));
 
   let async_property3 = (s, a1, a2, a3, fn) =>
     async_property3'(s, a1, a2, a3, (a, b, c) =>
-      fn(a, b, c)
-      |> Js.Promise.then_(x =>
-           x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve
-         )
+      fn(a, b, c) |> Js.Promise.then_(x => x |> Js.Promise.resolve)
     );
 
   let property4 = (s, a1, a2, a3, a4, fn) =>
-    property4'(s, a1, a2, a3, a4, (a, b, c, d) =>
-      fn(a, b, c, d) |> Js.Boolean.to_js_boolean
-    );
+    property4'(s, a1, a2, a3, a4, (a, b, c, d) => fn(a, b, c, d));
 
   let async_property4 = (s, a1, a2, a3, a4, fn) =>
     async_property4'(s, a1, a2, a3, a4, (a, b, c, d) =>
-      fn(a, b, c, d)
-      |> Js.Promise.then_(x =>
-           x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve
-         )
+      fn(a, b, c, d) |> Js.Promise.then_(x => x |> Js.Promise.resolve)
     );
 
   let property5 = (s, a1, a2, a3, a4, a5, fn) =>
-    property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) =>
-      fn(a, b, c, d, e) |> Js.Boolean.to_js_boolean
-    );
+    property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) => fn(a, b, c, d, e));
 
   let async_property5 = (s, a1, a2, a3, a4, a5, fn) =>
     async_property5'(s, a1, a2, a3, a4, a5, (a, b, c, d, e) =>
-      fn(a, b, c, d, e)
-      |> Js.Promise.then_(x =>
-           x |> Js.Boolean.to_js_boolean |> Js.Promise.resolve
-         )
+      fn(a, b, c, d, e) |> Js.Promise.then_(x => x |> Js.Promise.resolve)
     );
 };
