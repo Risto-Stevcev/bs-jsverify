@@ -17,9 +17,9 @@ browser-stdout@1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/browser-stdout/-/browser-stdout-1.3.1.tgz#baa559ee14ced73452229bad7326467c61fabd60"
 
-bs-mocha@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/bs-mocha/-/bs-mocha-0.3.0.tgz#bf4c4c830439e0d7d960ae0531e873cca0934043"
+bs-mocha@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/bs-mocha/-/bs-mocha-0.4.0.tgz#11fc890a1faee974e0d21d72c8c1fd3dc56f552b"
   dependencies:
     mocha "^5.0.0"
 
