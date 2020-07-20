@@ -6,13 +6,14 @@
     "type": "git",
     "url": "git://github.com/Risto-Stevcev/bs-jsverify.git"
   },
+  "main": "src/Verify.bs.js",
   "homepage": "https://github.com/Risto-Stevcev/bs-jsverify",
   "bugs": "https://github.com/Risto-Stevcev/bs-jsverify/issues",
   "scripts": {
     "clean": "bsb -clean-world",
     "build": "bsb -make-world",
     "watch": "bsb -make-world -w",
-    "test": "./node_modules/.bin/mocha lib/js/test/Test*.js"
+    "test": "mocha lib/js/test/Test*.js"
   },
   "keywords": [
     "BuckleScript",
@@ -21,10 +22,11 @@
   "author": "Risto Stevcev",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "bs-mocha": "^0.4.0",
-    "bs-platform": "^4.0.2"
+    "bs-mocha": "1.0.0",
+    "bs-platform": "8.0.3",
+    "jsverify": "0.8.4"
   },
-  "dependencies": {
-    "jsverify": "^0.8.3"
+  "peerDependencies": {
+    "jsverify": ">=0.8.0"
   }
 }
