@@ -6,6 +6,7 @@
     "type": "git",
     "url": "git://github.com/Risto-Stevcev/bs-jsverify.git"
   },
+  "main": "src/Verify.bs.js",
   "homepage": "https://github.com/Risto-Stevcev/bs-jsverify",
   "bugs": "https://github.com/Risto-Stevcev/bs-jsverify/issues",
   "scripts": {
